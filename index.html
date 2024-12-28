@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Items Mentioned in Cool Tools Newsletters and Podcasts</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        h1 {
+            color: #333;
+            margin-bottom: 30px;
+        }
+        .filters {
+            margin-bottom: 20px;
+        }
+        .filter-button {
+            padding: 8px 16px;
+            margin-right: 8px;
+            margin-bottom: 8px;
+            border: none;
+            border-radius: 4px;
+            background-color: #eee;
+            cursor: pointer;
+        }
+        .filter-button.active {
+            background-color: #0066cc;
+            color: white;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+        th {
+            background-color: #f5f5f5;
+            font-weight: 600;
+        }
+        tr:hover {
+            background-color: #f9f9f9;
+        }
+        .group {
+            color: #666;
+            font-size: 0.9em;
+        }
+        a {
+            color: #0066cc;
+            text-decoration: none;
+        }
+        a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <h1>Items Mentioned in Cool Tools Newsletters and Podcasts</h1>
+    
+    <p>Cool Tools Lab is a small company of three people. We publish the <a href="https://www.recomendo.com">Recomendo newsletter</a>, 
+    the <a href="https://kk.org/cooltools/">Cool Tools website</a>, a <a href="https://www.youtube.com/cooltools">YouTube channel</a> and 
+    <a href="https://open.spotify.com/show/5Bx52UzoVrjSp8bsZyNJcI">podcast</a>, and other newsletters, including 
+    <a href="https://garstips.substack.com/">Gar's Tips &amp; Tools</a>, 
+    <a href="https://nomadico.substack.com/">Nomadico</a>, 
+    <a href="https://whatsinmynow.substack.com/">What's in my NOW?</a>, 
+    <a href="https://toolsforpossibilities.substack.com/">Tools for Possibilities</a>, 
+    <a href="https://booksthatbelongonpaper.substack.com/">Books That Belong On Paper</a> and 
+    <a href="https://bookfreak.substack.com/">Book Freak</a>.</p> Here is a list of items mentioned in our newsletters and podcasts in December 2024.
+    
+    <div class="filters" id="groupFilters">
+        <!-- Filter buttons will be added here -->
+    </div>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Item</th>
+                <th>Group</th>
+            </tr>
+        </thead>
+        <tbody id="itemList">
+        </tbody>
+    </table>
+
+    <script src="coolToolsData.js"></script>
+    <script>
+        // Get unique groups for filters
+        const groups = [...new Set(coolToolsData.map(item => item.group))].sort();
+        
+        // Add filter buttons
+        const filtersDiv = document.getElementById('groupFilters');
+        const allButton = document.createElement('button');
+        allButton.textContent = 'All';
+        allButton.className = 'filter-button active';
+        allButton.onclick = function() { filterItems('all', this); };
+        filtersDiv.appendChild(allButton);
+        
+        groups.forEach(group => {
+            const button = document.createElement('button');
+            button.textContent = group;
+            button.className = 'filter-button';
+            button.onclick = function() { filterItems(group, this); };
+            filtersDiv.appendChild(button);
+        });
+
+        // Filter function
+        function filterItems(group, clickedButton) {
+            const buttons = document.querySelectorAll('.filter-button');
+            buttons.forEach(btn => btn.classList.remove('active'));
+            clickedButton.classList.add('active');
+
+            const itemList = document.getElementById('itemList');
+            itemList.innerHTML = '';
+            
+            const filteredData = group === 'all' 
+                ? coolToolsData 
+                : coolToolsData.filter(item => item.group === group);
+
+            filteredData.forEach(item => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td><a href="${item.url}" target="_blank">${item.title}</a></td>
+                    <td class="group">${item.group}</td>
+                `;
+                itemList.appendChild(row);
+            });
+        }
+
+        // Initial load
+        filterItems('all', allButton);
+    </script>
+</body>
+</html>
