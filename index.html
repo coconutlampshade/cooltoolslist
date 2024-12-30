@@ -98,21 +98,37 @@
             color: #64748b;
             font-size: 0.9em;
         }
+
+        .month-selector {
+            margin-bottom: 2rem;
+        }
+        
+        .month-selector select {
+            padding: 8px 16px;
+            font-size: 16px;
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            background-color: white;
+            cursor: pointer;
+        }
+        
+        .month-selector select:hover {
+            border-color: var(--primary);
+        }
     </style>
 </head>
 <body>
     <h1>Items Mentioned in Cool Tools Newsletters and Podcasts</h1>
     
-    <p>Cool Tools Lab is a small company of three people. We publish the <a href="https://www.recomendo.com">Recomendo newsletter</a>, 
-    the <a href="https://kk.org/cooltools/">Cool Tools website</a>, a <a href="https://www.youtube.com/cooltools">YouTube channel</a> and 
-    <a href="https://open.spotify.com/show/5Bx52UzoVrjSp8bsZyNJcI">podcast</a>, and other newsletters, including 
-    <a href="https://garstips.substack.com/">Gar's Tips &amp; Tools</a>, 
-    <a href="https://nomadico.substack.com/">Nomadico</a>, 
-    <a href="https://whatsinmynow.substack.com/">What's in my NOW?</a>, 
-    <a href="https://toolsforpossibilities.substack.com/">Tools for Possibilities</a>, 
-    <a href="https://booksthatbelongonpaper.substack.com/">Books That Belong On Paper</a> and 
-    <a href="https://bookfreak.substack.com/">Book Freak</a>.</p> Here is a list of items mentioned in our newsletters and podcasts in December 2024.
-    
+    <div class="month-selector">
+        <select id="monthSelect" onchange="loadMonthData(this.value)">
+            <option value="202412">December 2024</option>
+            <option value="202411">November 2024</option>
+            <option value="202410">October 2024</option>
+            <option value="202409">September 2024</option>
+        </select>
+    </div>
+
     <div class="filters" id="groupFilters">
         <!-- Filter buttons will be added here -->
     </div>
@@ -128,39 +144,81 @@
         </tbody>
     </table>
 
-    <script src="coolToolsData.js"></script>
+    <!-- First, load both data files with different variable names -->
     <script>
-        // Get unique groups for filters
-        const groups = [...new Set(coolToolsData.map(item => item.group))].sort();
-        
-        // Add filter buttons
-        const filtersDiv = document.getElementById('groupFilters');
-        const allButton = document.createElement('button');
-        allButton.textContent = 'All';
-        allButton.className = 'filter-button active';
-        allButton.onclick = function() { filterItems('all', this); };
-        filtersDiv.appendChild(allButton);
-        
-        groups.forEach(group => {
-            const button = document.createElement('button');
-            button.textContent = group;
-            button.className = 'filter-button';
-            button.onclick = function() { filterItems(group, this); };
-            filtersDiv.appendChild(button);
-        });
+        // Pre-declare the variables to avoid conflicts
+        let coolToolsData202411 = [];
+        let coolToolsData202412 = [];
+    </script>
 
-        // Filter function
-        function filterItems(group, clickedButton) {
-            const buttons = document.querySelectorAll('.filter-button');
-            buttons.forEach(btn => btn.classList.remove('active'));
-            clickedButton.classList.add('active');
+    <script>
+        // Load November data
+        fetch('coolToolsData202411.js')
+            .then(response => response.text())
+            .then(text => {
+                // Convert the content to use our specific variable
+                const modifiedText = text.replace('const coolToolsData =', 'coolToolsData202411 =');
+                eval(modifiedText);
+            });
+
+        // Load December data
+        fetch('coolToolsData202412.js')
+            .then(response => response.text())
+            .then(text => {
+                // Convert the content to use our specific variable
+                const modifiedText = text.replace('const coolToolsData =', 'coolToolsData202412 =');
+                eval(modifiedText);
+            });
+    </script>
+
+    <!-- Then update the main script -->
+    <script>
+        function loadMonthData(yearMonth) {
+            console.log('Loading data for:', yearMonth);
+            
+            // Get the correct data array based on the month
+            const data = yearMonth === '202411' ? coolToolsData202411 : coolToolsData202412;
+            console.log(`Found ${data.length} items for ${yearMonth}`);
+            
+            // Update display with current month's data
+            filterItems('all', document.querySelector('.filter-button.active') || document.querySelector('.filter-button'), data);
+            updateFilters(data);
+        }
+
+        function updateFilters(data) {
+            const filtersDiv = document.getElementById('groupFilters');
+            filtersDiv.innerHTML = '';
+            
+            const allButton = document.createElement('button');
+            allButton.textContent = 'All';
+            allButton.className = 'filter-button active';
+            allButton.onclick = function() { filterItems('all', this, data); };
+            filtersDiv.appendChild(allButton);
+            
+            const groups = [...new Set(data.map(item => item.group))].sort();
+            
+            groups.forEach(group => {
+                const button = document.createElement('button');
+                button.textContent = group;
+                button.className = 'filter-button';
+                button.onclick = function() { filterItems(group, this, data); };
+                filtersDiv.appendChild(button);
+            });
+        }
+
+        function filterItems(group, clickedButton, data) {
+            if (clickedButton) {
+                const buttons = document.querySelectorAll('.filter-button');
+                buttons.forEach(btn => btn.classList.remove('active'));
+                clickedButton.classList.add('active');
+            }
 
             const itemList = document.getElementById('itemList');
             itemList.innerHTML = '';
             
             const filteredData = group === 'all' 
-                ? coolToolsData 
-                : coolToolsData.filter(item => item.group === group);
+                ? data 
+                : data.filter(item => item.group === group);
 
             filteredData.forEach(item => {
                 const row = document.createElement('tr');
@@ -172,8 +230,19 @@
             });
         }
 
-        // Initial load
-        filterItems('all', allButton);
+        // Initialize when the page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            // Wait a bit for data to load
+            setTimeout(() => {
+                // Load initial data (December 2024)
+                loadMonthData('202412');
+                
+                // Set up month selector change handler
+                document.getElementById('monthSelect').addEventListener('change', function(e) {
+                    loadMonthData(e.target.value);
+                });
+            }, 500);
+        });
     </script>
 </body>
 </html>
