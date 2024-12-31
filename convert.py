@@ -1,6 +1,18 @@
 import re
 import os
 
+def clean_title(title):
+    # Remove any text after common separators
+    separators = ['150 FPS', ' - ', ' with ', ', with', ' for ', ' by ']
+    for sep in separators:
+        if sep in title:
+            title = title.split(sep)[0]
+    
+    # Remove extra spaces
+    title = ' '.join(title.split())
+    
+    return title.strip()
+
 def parse_tools_file(input_file):
     # Check if file exists
     if not os.path.exists(input_file):
@@ -60,7 +72,8 @@ def parse_tools_file(input_file):
 
         if title and group and url:
             # Clean up the data
-            title = title.replace('"', '\\"')  # Escape quotes
+            title = clean_title(title)
+            title = title.replace('"', '\\"')
             group = group.replace('"', '\\"')
             url = url.replace('"', '\\"')
             
@@ -71,7 +84,7 @@ def parse_tools_file(input_file):
                 "group": group
             }
             tools.append(tool)
-            print(f"Processed entry {i+1}: {title[:50]}...")
+            print(f"Entry {i+1}: {title[:50]}...")
 
     print(f"\nFound {len(tools)} valid tools")
 
